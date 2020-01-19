@@ -1,0 +1,157 @@
+\documentclass{article}
+
+\usepackage[margin=1in, includefoot]{geometry}
+\usepackage{fancyhdr}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{subcaption}
+
+
+\begin{document}
+\begin{titlepage}
+	\begin{center}
+	\huge{\bfseries Project 1}\\
+	[1.5cm]
+	\textsc{\LARGE Prime Number}\\
+	[1.5 cm]
+	\textsc{\LARGE By}\\
+	[1.5cm]
+	\textsc{\LARGE Miss. Sasirat Harnwatthanasiri 6088024}\\
+	\textsc{\LARGE Mr. Nattawat  Lumtansawan 6088085}\\
+	\textsc{\LARGE Mr. Waris  Vorathumdusasee 6088128}\\
+	\textsc{\LARGE Miss. Pantita  Wang 6088219}\\
+	\textsc{\LARGE Mr. Sirichoke  Yooyen 6088232}\\
+	\textsc{\LARGE Miss. Phummarat  Yosamornsuntorn 6088233}\\
+	[1.5cm]
+	\textsc{\LARGE A Report Submitted in Partial Fulfilment of}\\
+	\textsc{\LARGE the Requirements for}\\
+	\textsc{\LARGE ITCS443 Parallel and Distributed System}\\
+	[1.5cm]
+	\textsc{\LARGE Faculty of Information and Communication Technology}\\
+	\textsc{\LARGE Mahidol University 2019}\\
+	\end{center}
+\end{titlepage}
+
+\Large This report described Sieve of Eratosthenes (finding the prime number) using MPI. There are 7 points that need to explain, which include algorithm, implementation, evaluation, performance results, discussion of the results, analysis of the algorithm, and further optimization.
+
+
+\section{\Large Algorithm \&  Implementation}\label{sec:algo} 
+
+\hspace{10mm}This algorithm was separated into 2 parts which are sequential and parallel version.\\
+\begin{itemize}
+	\item  {\bfseries Sequential Version Algorithm [1]} 
+	\begin{enumerate}
+		\item Create a list of unmarked natural number 2, 3,..., n
+		\item k $\leftarrow$ 2
+		\item Repeat
+		\begin{itemize}
+			\item Mark all multiples of k between $k^2$ and n.
+			\item k $\leftarrow$ smallest unmarked number $>$ k until $k^2 > n$
+		\end{itemize}
+		\item The unmarked numbers are primes\\
+	\end{enumerate}
+	
+        	\item {\bfseries  Parallel Version Algorithm [1]}
+	\begin{enumerate}
+		\item Create a list of unmarked natural number 2, 3,..., n. Each process creates its share of the list. 
+		\item k $\leftarrow$ 2 (All process performs this)
+		\item Repeat
+		\begin{itemize}
+			\item Mark all multiples of k between $k^2$ and n. (Each process marks its share of the list)
+			\item k $\leftarrow$ smallest unmarked number $>$ (Process 0 only)
+			\item Process 0 broadcasts k to rest of processes until $k^2 > n$
+		\end{itemize}
+		\item The unmarked numbers are primes
+		\item Reduction to determine the number of primes \\
+	\end{enumerate}
+\end{itemize}
+
+\begin{itemize}
+	\item {\bfseries  Analysis of the Parallel Algorithm}
+		\begin{enumerate}
+			\item Let $\alpha$  be the time to mark a cell.
+			\item Sequential execution time: $\alpha n log log n$
+			\item Computation time of parallel program: $\alpha n log log n / p$
+			\item Number of broadcasts: $\sqrt{n} / log \sqrt{n}$
+			\item Broadcast time: $\lambda \lceil log p \rceil$
+			\item Reduction time: $\lambda \lceil log p \rceil$
+			\item Expected parallel execution time:  $\alpha \frac{n log log n}{p} + \frac{\lceil log \rceil}{log \sqrt{n}} + \lambda \lceil log p \rceil$
+		\end{enumerate}
+\end{itemize}
+
+\section{\Large Evaluation}\label{sec:eva}
+\hspace{10mm}In this part, a comparison between sequential and parallel version. In the sequential, if n is equal to 100, the program will start at index 0 to index 99. In other words, sequential uses a global index to run the program. While parallel version, if n is equal to 100 and 4 processes are used, the block will contain four blocks, and each of them includes 25 indexes with the same number of size. So, it uses the local index.\\
+
+\section{\Large Performance Results}\label{sec:perform}
+\hspace{10mm}From (a)Sequential in Figure 1, all answer is 78498 numbers of prime from 1-1,000,000 and it uses 0.610000 seconds to execute. On the other hand, (b)Parallel in Figure 2, all answer is 78498 numbers of prime from 1-1,000,000 and it uses 0.009813 seconds to execute. Therefore, that means the difference is about the execute time.\\
+\begin{figure}[h!]
+	\centering 
+	\begin{subfigure}[b]{0.8\linewidth}
+		\includegraphics[width=\linewidth]{1}
+		\caption{Sequential}
+	\end{subfigure}
+	\begin{subfigure}[b]{0.8\linewidth}
+		\includegraphics[width=\linewidth]{2}
+		\caption{Parallel}
+	\end{subfigure}
+	\caption{Compare between Sequential and Parallel}
+	\label{fig:sq}
+\end{figure}
+\pagebreak
+
+\begin{figure}[h!]
+\centering 
+\includegraphics[scale = 0.6]{3}
+\caption{In the parallel version, compare between 4, 8 processes, and 16 processes.}
+\label{fig:compare}
+\end{figure}
+According to the figure 2, from these 3 processes, which are 4, 8, 16 processes. It shows that if use more processes it will be faster. However, it depends on the internet because we connect to the Mahidol server.
+
+
+
+\section{\Large Discussion about the results}\label{sec:discuss}
+\hspace{10mm}The difficult part is writing code from sequential process to make it operate together or how to make each process independent since we split into blocks. Other outside blocks cannot know how far that process is running. Due to that, we need to use a broadcast command to find k value to other blocks that they can access the same value. Then, we need to MPI\_reduce, to sum up, the results from all the blocks. Moreover, if the size of data is too large the runtime will be very slow. 
+
+\section{\Large Analysis of the algorithm}\label{sec:analysis}
+\hspace{10mm}The algorithm that we used will balance the process and speed up the runtime. Moreover, it is very complicated to define which block belongs to what process.
+
+\section{\Large Further optimization}\label{sec:further}
+\hspace{10mm}Remove the even numbers that are not number 2 or not add to the block at all so it will be easier to search and limited the communication so runtime process will take shorter.
+
+\section{\Large Responsibility for each member}\label{sec:respond}
+\begin{itemize}
+	\item Sasirat Harnwatthanasiri 6088024
+	\begin{itemize}
+		\item Analysis of the algorithm and do the slide
+	\end{itemize}
+	\item Nattawat Lumtansawan 6088085
+	\begin{itemize}
+		\item Find algorithm and debug the code
+	\end{itemize}
+	\item Waris Vorathumdusadee 6088128
+	\begin{itemize}
+		\item Find the way that can improve the code
+	\end{itemize}
+	\item Pantita Wang 6088219
+	\begin{itemize}
+		\item Find the information about MPI
+	\end{itemize}
+	\item Sirichoke Yooyen 6088232
+	\begin{itemize}
+		\item Writing code in sequential and parallel
+	\end{itemize}
+	\item Phummarat Yosamornsuntorn 6088233
+	\begin{itemize}
+		\item Compare the result between the sequential and parallel
+	\end{itemize}
+\end{itemize}
+
+\cleardoublepage
+\Large \bfseries{Reference}\\
+[1.0cm]
+\Large [1] mycourses.ict.mahidol.ac.th
+
+
+
+
+\end{document}
